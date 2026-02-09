@@ -1,5 +1,12 @@
 
+using Microsoft.EntityFrameworkCore;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Reflection;
+using TimeScale.Api.Middlewares;
+using TimeScale.Application.Helpers;
+using TimeScale.Application.Interfaces;
+using TimeScale.Application.Services;
+using TimeScale.DataAccess;
 
 namespace TimeScale.Api
 {
@@ -11,6 +18,9 @@ namespace TimeScale.Api
 
             // Add services to the container.
 
+            builder.Services.AddExceptionHandler<GlobalExceptionMiddleware>();
+            builder.Services.AddProblemDetails();
+
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
@@ -21,6 +31,20 @@ namespace TimeScale.Api
                 options.IncludeXmlComments(xmlPath);
             });
 
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(AppDbContext)));
+            });
+
+            builder.Services.AddScoped<IFileProcessingService, FileProcessingService>();
+            builder.Services.AddScoped<IResultsQueryService, ResultsQueryService>();
+            builder.Services.AddScoped<IFileProcessingService, FileProcessingService>();
+            builder.Services.AddScoped<ICsvParser, CsvParser>();
+            builder.Services.AddScoped<ICsvDomainValidator, CsvDomainValidator>();
+            builder.Services.AddScoped<IResultCalculator, ResultCalculator>();
+
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -30,6 +54,8 @@ namespace TimeScale.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseExceptionHandler();
 
             app.UseAuthorization();
 

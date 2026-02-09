@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="TimeScale.Api/TimeScale.Api.csproj" />
+  <Project Path="TimeScale.Application/TimeScale.Application.csproj" />
+  <Project Path="TimeScale.DataAccess/TimeScale.DataAccess.csproj" />
 </Solution>
