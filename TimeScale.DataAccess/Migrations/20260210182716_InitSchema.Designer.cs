@@ -12,7 +12,7 @@ using TimeScale.DataAccess;
 namespace TimeScale.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260209204400_InitSchema")]
+    [Migration("20260210182716_InitSchema")]
     partial class InitSchema
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace TimeScale.DataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("TimeScale.DataAccess.Entities.Result", b =>
+            modelBuilder.Entity("TimeScale.Application.Entities.Result", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -69,7 +69,7 @@ namespace TimeScale.DataAccess.Migrations
                     b.ToTable("results", (string)null);
                 });
 
-            modelBuilder.Entity("TimeScale.DataAccess.Entities.UploadedFile", b =>
+            modelBuilder.Entity("TimeScale.Application.Entities.UploadedFile", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -94,7 +94,7 @@ namespace TimeScale.DataAccess.Migrations
                     b.ToTable("uploaded_files", (string)null);
                 });
 
-            modelBuilder.Entity("TimeScale.DataAccess.Entities.ValueRecord", b =>
+            modelBuilder.Entity("TimeScale.Application.Entities.ValueRecord", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -121,20 +121,20 @@ namespace TimeScale.DataAccess.Migrations
                     b.ToTable("values", (string)null);
                 });
 
-            modelBuilder.Entity("TimeScale.DataAccess.Entities.Result", b =>
+            modelBuilder.Entity("TimeScale.Application.Entities.Result", b =>
                 {
-                    b.HasOne("TimeScale.DataAccess.Entities.UploadedFile", "UploadedFile")
+                    b.HasOne("TimeScale.Application.Entities.UploadedFile", "UploadedFile")
                         .WithOne("Result")
-                        .HasForeignKey("TimeScale.DataAccess.Entities.Result", "UploadedFileId")
+                        .HasForeignKey("TimeScale.Application.Entities.Result", "UploadedFileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("UploadedFile");
                 });
 
-            modelBuilder.Entity("TimeScale.DataAccess.Entities.ValueRecord", b =>
+            modelBuilder.Entity("TimeScale.Application.Entities.ValueRecord", b =>
                 {
-                    b.HasOne("TimeScale.DataAccess.Entities.UploadedFile", "UploadedFile")
+                    b.HasOne("TimeScale.Application.Entities.UploadedFile", "UploadedFile")
                         .WithMany("ValueRecords")
                         .HasForeignKey("UploadedFileId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -143,7 +143,7 @@ namespace TimeScale.DataAccess.Migrations
                     b.Navigation("UploadedFile");
                 });
 
-            modelBuilder.Entity("TimeScale.DataAccess.Entities.UploadedFile", b =>
+            modelBuilder.Entity("TimeScale.Application.Entities.UploadedFile", b =>
                 {
                     b.Navigation("Result");
 
