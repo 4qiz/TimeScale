@@ -1,6 +1,6 @@
 ﻿
 
-namespace TimeScale.DataAccess.Entities
+namespace TimeScale.Application.Entities
 {
     public class UploadedFile
     {

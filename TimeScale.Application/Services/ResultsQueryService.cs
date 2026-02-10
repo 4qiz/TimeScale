@@ -1,18 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using TimeScale.Application.Dtos;
+using TimeScale.Application.Entities;
 using TimeScale.Application.Interfaces;
-using TimeScale.DataAccess;
 
 namespace TimeScale.Application.Services
 {
-    public class ResultsQueryService(AppDbContext db) : IResultsQueryService
+    public sealed class ResultsQueryService(
+    IResultRepository resultRepository,
+    IValueRecordRepository valueRecordRepository) : IResultsQueryService
     {
-        public async Task<IReadOnlyCollection<ResultDto>> GetResultsAsync(ResultFilterDto filter, CancellationToken ct)
+        public async Task<IReadOnlyCollection<ResultDto>> GetResultsAsync(
+            ResultFilterDto filter,
+            CancellationToken ct)
         {
-            var query = db.Results
+            var query = resultRepository.Query()
                 .Include(x => x.UploadedFile)
                 .AsQueryable();
 
@@ -53,9 +55,11 @@ namespace TimeScale.Application.Services
                 .ToListAsync(ct);
         }
 
-        public async Task<IReadOnlyCollection<ValueRecordDto>> GetLastValuesAsync(string fileName, CancellationToken ct)
+        public async Task<IReadOnlyCollection<ValueRecordDto>> GetLastValuesAsync(
+            string fileName,
+            CancellationToken ct)
         {
-            return await db.ValueRecords
+            return await valueRecordRepository.Query()
                 .Where(x => x.UploadedFile.FileName == fileName)
                 .OrderByDescending(x => x.DateUtc)
                 .Take(10)
@@ -68,4 +72,5 @@ namespace TimeScale.Application.Services
                 .ToListAsync(ct);
         }
     }
+
 }

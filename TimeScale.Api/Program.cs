@@ -7,6 +7,7 @@ using TimeScale.Application.Helpers;
 using TimeScale.Application.Interfaces;
 using TimeScale.Application.Services;
 using TimeScale.DataAccess;
+using TimeScale.DataAccess.Repositories;
 
 namespace TimeScale.Api
 {
@@ -43,7 +44,10 @@ namespace TimeScale.Api
             builder.Services.AddScoped<ICsvParser, CsvParser>();
             builder.Services.AddScoped<ICsvDomainValidator, CsvDomainValidator>();
             builder.Services.AddScoped<IResultCalculator, ResultCalculator>();
-
+            builder.Services.AddScoped<IResultRepository, ResultRepository>();
+            builder.Services.AddScoped<IUploadedFileRepository, UploadedFileRepository>();
+            builder.Services.AddScoped<IValueRecordRepository, ValueRecordRepository>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             var app = builder.Build();
 

@@ -1,62 +1,67 @@
-﻿
-
-using Microsoft.EntityFrameworkCore;
-using System.Globalization;
-using TimeScale.Application.Dtos;
-using TimeScale.Application.Exceptions;
+﻿using TimeScale.Application.Dtos;
+using TimeScale.Application.Entities;
 using TimeScale.Application.Interfaces;
-using TimeScale.DataAccess;
-using TimeScale.DataAccess.Entities;
 
 namespace TimeScale.Application.Services
 {
     public sealed class FileProcessingService(
-        AppDbContext db,
-        ICsvParser parser,
-        ICsvDomainValidator validator,
-        IResultCalculator calculator) : IFileProcessingService
+    IUploadedFileRepository uploadedFileRepository,
+    IResultRepository resultRepository,
+    IValueRecordRepository valueRecordRepository,
+    IUnitOfWork unitOfWork,
+    ICsvParser parser,
+    ICsvDomainValidator validator,
+    IResultCalculator calculator) : IFileProcessingService
     {
         public async Task UploadAndProcessAsync(UploadCsvCommand command, CancellationToken ct)
         {
             ArgumentNullException.ThrowIfNull(command);
             ArgumentNullException.ThrowIfNull(command.CsvStream);
 
-            using var transaction = await db.Database.BeginTransactionAsync(ct);
+            await unitOfWork.BeginTransactionAsync(ct);
 
-            await RemoveExistingFileAsync(command.FileName, ct);
+            try
+            {
+                await RemoveExistingFileAsync(command.FileName, ct);
 
-            var records = await parser.ParseAsync(command.CsvStream, ct);
+                var records = await parser.ParseAsync(command.CsvStream, ct);
 
-            validator.Validate(records);
+                validator.Validate(records);
 
-            var uploadedFile = BuildUploadedFile(command.FileName, records);
+                UploadedFile uploadedFile = BuildUploadedFile(command.FileName, records);
 
-            uploadedFile.Result = calculator.Calculate(uploadedFile.ValueRecords);
+                uploadedFile.Result = calculator.Calculate(uploadedFile.ValueRecords);
 
-            db.UploadedFiles.Add(uploadedFile);
+                await uploadedFileRepository.AddAsync(uploadedFile, ct);
 
-            await db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
+                await unitOfWork.SaveChangesAsync(ct);
+                await unitOfWork.CommitAsync(ct);
+            }
+            catch
+            {
+                await unitOfWork.RollbackAsync(ct);
+                throw;
+            }
         }
 
         private async Task RemoveExistingFileAsync(string fileName, CancellationToken ct)
         {
-            var existingFile = await db.UploadedFiles
-                .Include(x => x.ValueRecords)
-                .Include(x => x.Result)
-                .FirstOrDefaultAsync(x => x.FileName == fileName, ct);
+            var existingFile =
+                await uploadedFileRepository.GetByFileNameWithRelationsAsync(fileName, ct);
 
             if (existingFile is null)
+            {
                 return;
+            }
 
-            db.ValueRecords.RemoveRange(existingFile.ValueRecords);
+            await valueRecordRepository.RemoveRangeAsync(existingFile.ValueRecords, ct);
 
             if (existingFile.Result != null)
-                db.Results.Remove(existingFile.Result);
+                await resultRepository.RemoveAsync(existingFile.Result, ct);
 
-            db.UploadedFiles.Remove(existingFile);
+            await uploadedFileRepository.RemoveAsync(existingFile, ct);
 
-            await db.SaveChangesAsync(ct);
+            await unitOfWork.SaveChangesAsync(ct);
         }
 
         private static UploadedFile BuildUploadedFile(

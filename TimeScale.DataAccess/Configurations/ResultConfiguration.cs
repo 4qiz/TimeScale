@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TimeScale.DataAccess.Entities;
+using TimeScale.Application.Entities;
 
 namespace TimeScale.DataAccess.Configurations
 {

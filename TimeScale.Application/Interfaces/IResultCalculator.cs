@@ -1,5 +1,5 @@
 ﻿
-using TimeScale.DataAccess.Entities;
+using TimeScale.Application.Entities;
 
 namespace TimeScale.Application.Interfaces
 {

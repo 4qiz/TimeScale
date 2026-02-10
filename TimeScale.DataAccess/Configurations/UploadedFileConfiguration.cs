@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TimeScale.DataAccess.Entities;
+using TimeScale.Application.Entities;
 
 namespace TimeScale.DataAccess.Configurations
 {
