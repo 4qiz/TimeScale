@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using TimeScale.Application.Dtos;
-using TimeScale.Application.Entities;
 using TimeScale.Application.Interfaces;
 
 namespace TimeScale.Application.Services

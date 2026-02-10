@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="TimeScale.Api/TimeScale.Api.csproj" />
+  <Project Path="TimeScale.Application.Tests/TimeScale.Application.Tests.csproj" Id="28c0d936-40b9-4480-ba77-a64502045f37" />
   <Project Path="TimeScale.Application/TimeScale.Application.csproj" />
   <Project Path="TimeScale.DataAccess/TimeScale.DataAccess.csproj" />
 </Solution>

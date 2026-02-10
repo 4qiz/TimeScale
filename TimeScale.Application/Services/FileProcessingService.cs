@@ -89,5 +89,4 @@ namespace TimeScale.Application.Services
             return uploadedFile;
         }
     }
-
 }

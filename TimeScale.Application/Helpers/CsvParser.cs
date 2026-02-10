@@ -13,42 +13,46 @@ namespace TimeScale.Application.Helpers
             Stream csvStream,
             CancellationToken ct)
         {
-            var records = new List<ValueRecordDto>(capacity: 1024);
+            var records = new List<ValueRecordDto>(1024);
 
             using var reader = new StreamReader(csvStream, leaveOpen: true);
 
             var header = await reader.ReadLineAsync(ct);
-            if (header != "Date;ExecutionTime;Value")
+            if (!string.Equals(header, "Date;ExecutionTime;Value", StringComparison.Ordinal))
                 throw new ValidationException("Invalid CSV header");
 
             string? line;
+
             while ((line = await reader.ReadLineAsync(ct)) != null)
             {
                 ct.ThrowIfCancellationRequested();
 
-                var parts = line.Split(';');
-                if (parts.Length != 3)
+                var span = line.AsSpan();
+
+                int firstSep = span.IndexOf(';');
+                int secondSep = span.Slice(firstSep + 1).IndexOf(';');
+
+                if (firstSep < 0 || secondSep < 0)
                     throw new ValidationException("Invalid CSV format");
 
-                if (!DateTime.TryParse(
-                        parts[0],
+                secondSep += firstSep + 1;
+
+                var dateSpan = span.Slice(0, firstSep);
+                var execSpan = span.Slice(firstSep + 1, secondSep - firstSep - 1);
+                var valueSpan = span.Slice(secondSep + 1);
+
+                if (!DateTime.TryParseExact(
+                        dateSpan,
+                        "yyyy-MM-dd'T'HH:mm:ss'Z'",
                         CultureInfo.InvariantCulture,
-                        DateTimeStyles.AdjustToUniversal,
+                        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
                         out var date))
                     throw new ValidationException("Invalid Date");
 
-                if (!double.TryParse(
-                        parts[1],
-                        NumberStyles.Float,
-                        CultureInfo.InvariantCulture,
-                        out var executionTime))
+                if (!double.TryParse(execSpan, NumberStyles.Float, CultureInfo.InvariantCulture, out var executionTime))
                     throw new ValidationException("Invalid ExecutionTime");
 
-                if (!double.TryParse(
-                        parts[2],
-                        NumberStyles.Float,
-                        CultureInfo.InvariantCulture,
-                        out var value))
+                if (!double.TryParse(valueSpan, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
                     throw new ValidationException("Invalid Value");
 
                 records.Add(new ValueRecordDto
