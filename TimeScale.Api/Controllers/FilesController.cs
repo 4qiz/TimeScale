@@ -6,20 +6,20 @@ using TimeScale.Application.Interfaces;
 namespace TimeScale.Api.Controllers
 {
     /// <summary>
-    /// Контроллер для обработки файлов.
-    /// Предоставляет эндпоинты для загрузки и обработки CSV файлов.
+    /// Handles CSV file uploads and processing requests.
     /// </summary>
     [ApiController]
     [Route("api/files")]
     public class FilesController(IFileProcessingService service) : ControllerBase
     {
-
         /// <summary>
-        /// Загружает и обрабатывает CSV файл.
+        /// Uploads and processes a CSV file.
         /// </summary>
-        /// <response code="200">Файл успешно принят в обработку</response>
-        /// <response code="400">Файл отсутствует или имеет нулевой размер</response>
-        /// <response code="500">Внутренняя ошибка сервера при обработке файла</response>
+        /// <param name="form">The multipart form containing the upload payload.</param>
+        /// <param name="ct">A cancellation token.</param>
+        /// <response code="200">The file was accepted for processing.</response>
+        /// <response code="400">The file is missing or invalid.</response>
+        /// <response code="500">An internal server error occurred while processing the file.</response>
         [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Upload(

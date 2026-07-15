@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using TimeScale.Application.Exceptions;
+using ApplicationValidationException = TimeScale.Application.Exceptions.ValidationException;
 
 namespace TimeScale.Api.Middlewares
 {
     internal sealed class GlobalExceptionMiddleware(
-    IProblemDetailsService problemDetailsService,
-    ILogger<GlobalExceptionMiddleware> logger) : IExceptionHandler
+        IProblemDetailsService problemDetailsService,
+        ILogger<GlobalExceptionMiddleware> logger) : IExceptionHandler
     {
         public async ValueTask<bool> TryHandleAsync(
             HttpContext httpContext,
@@ -18,22 +18,27 @@ namespace TimeScale.Api.Middlewares
 
             httpContext.Response.StatusCode = exception switch
             {
-                ApplicationException => StatusCodes.Status400BadRequest,
-                ValidationException => StatusCodes.Status400BadRequest,
+                ApplicationValidationException => StatusCodes.Status400BadRequest,
+                FluentValidation.ValidationException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
 
-            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            var isValidationFailure = exception is ApplicationValidationException
+                || exception is FluentValidation.ValidationException;
+
+            await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
             {
                 HttpContext = httpContext,
                 Exception = exception,
                 ProblemDetails = new ProblemDetails
                 {
                     Type = exception.GetType().Name,
-                    Title = "An error occured",
+                    Title = isValidationFailure ? "Validation failed" : "An error occurred",
                     Detail = exception.Message
                 }
             });
+
+            return true;
         }
     }
 }

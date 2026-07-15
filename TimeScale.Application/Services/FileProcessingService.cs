@@ -1,22 +1,26 @@
-﻿using TimeScale.Application.Dtos;
+﻿using FluentValidation;
+using TimeScale.Application.Dtos;
 using TimeScale.Application.Entities;
 using TimeScale.Application.Interfaces;
 
 namespace TimeScale.Application.Services
 {
     public sealed class FileProcessingService(
-    IUploadedFileRepository uploadedFileRepository,
-    IResultRepository resultRepository,
-    IValueRecordRepository valueRecordRepository,
-    IUnitOfWork unitOfWork,
-    ICsvParser parser,
-    ICsvDomainValidator validator,
-    IResultCalculator calculator) : IFileProcessingService
+        IUploadedFileRepository uploadedFileRepository,
+        IResultRepository resultRepository,
+        IValueRecordRepository valueRecordRepository,
+        IUnitOfWork unitOfWork,
+        ICsvParser parser,
+        ICsvDomainValidator validator,
+        IResultCalculator calculator,
+        IValidator<UploadCsvCommand> uploadCsvCommandValidator) : IFileProcessingService
     {
         public async Task UploadAndProcessAsync(UploadCsvCommand command, CancellationToken ct)
         {
             ArgumentNullException.ThrowIfNull(command);
             ArgumentNullException.ThrowIfNull(command.CsvStream);
+
+            uploadCsvCommandValidator.ValidateAndThrow(command);
 
             await unitOfWork.BeginTransactionAsync(ct);
 
@@ -28,8 +32,7 @@ namespace TimeScale.Application.Services
 
                 validator.Validate(records);
 
-                UploadedFile uploadedFile = BuildUploadedFile(command.FileName, records);
-
+                var uploadedFile = BuildUploadedFile(command.FileName, records);
                 uploadedFile.Result = calculator.Calculate(uploadedFile.ValueRecords);
 
                 await uploadedFileRepository.AddAsync(uploadedFile, ct);

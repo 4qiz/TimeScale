@@ -1,18 +1,22 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using TimeScale.Application.Dtos;
 using TimeScale.Application.Interfaces;
 
 namespace TimeScale.Application.Services
 {
     public sealed class ResultsQueryService(
-    IResultRepository resultRepository,
-    IValueRecordRepository valueRecordRepository) : IResultsQueryService
+        IResultRepository resultRepository,
+        IValueRecordRepository valueRecordRepository,
+        IValidator<ResultFilterDto> resultFilterValidator) : IResultsQueryService
     {
         public async Task<IReadOnlyCollection<ResultDto>> GetResultsAsync(
             ResultFilterDto filter,
             CancellationToken ct)
         {
+            ArgumentNullException.ThrowIfNull(filter);
+            resultFilterValidator.ValidateAndThrow(filter);
+
             var query = resultRepository.Query()
                 .Include(x => x.UploadedFile)
                 .AsQueryable();
@@ -71,5 +75,4 @@ namespace TimeScale.Application.Services
                 .ToListAsync(ct);
         }
     }
-
 }
